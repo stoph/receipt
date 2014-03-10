@@ -1,0 +1,12 @@
+{
+    "name": "stoph/delivery-confirmation",
+    "authors": [
+        {
+            "name": "Christoph",
+            "email": "christoph.khouri@gmail.com"
+        }
+    ],
+    "require": {
+	"swiftmailer/swiftmailer": "@stable"
+    }
+}
