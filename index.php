@@ -2,13 +2,11 @@
 
 require 'vendor/autoload.php';
 
-$files_folder = getcwd().'/files/';
+$file = $_GET['file'];
+$full_file = getcwd().'/'.$file;
+$ext = strtolower(substr(strrchr($full_file,"."),1));
 
-$file = $files_folder.$_GET['file'];
-if (file_exists($file) && is_readable($file)) {
-
-	$filename = basename($file);
-	$ext = strtolower(substr(strrchr($filename,"."),1));
+if (file_exists($full_file) && is_readable($full_file)) {
 
 	switch( $ext ) {
 		case "pdf":
@@ -28,13 +26,16 @@ if (file_exists($file) && is_readable($file)) {
 			break;
 		case "gif":
 			$mime = "image/gif";
+			$type = 'image';
 			break;
 		case "png":
 			$mime = "image/png";
+			$type = 'image';
 			break;
 		case "jpeg":
 		case "jpg":
 			$mime = "image/jpg";
+			$type = 'image';
 			break;
 		case "mp3":
 			$mime = "audio/mpeg";
@@ -55,15 +56,16 @@ if (file_exists($file) && is_readable($file)) {
 			break;
 		default:
 			$mime = FALSE;
+			$type = NULL;
 	}
 
 	if ($mime) {
 		header('Content-type: '.$mime);
-		header('Content-length: '.filesize($file));
-		$fh = @fopen($file, 'rb');
+		header('Content-length: '.filesize($full_file));
+		$fh = @fopen($full_file, 'rb');
 		if ($fh) {
 			fpassthru($fh);
-			send_confirmation($file);
+			send_confirmation($file, $type);
 			exit;
 		}
 	} else {
@@ -75,21 +77,28 @@ if (file_exists($file) && is_readable($file)) {
 	exit;
 }
 
-function send_confirmation($file) {
+function send_confirmation($file, $type) {
 
 	$transport = Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs');
 
 	$mailer = Swift_Mailer::newInstance($transport);
 
 	// Create the message
-	$message = Swift_Message::newInstance()
-		->setSubject('File viewed')
-		->setFrom(array('noreply@stoph.me' => 'Delivery Confirmation'))
-		->setTo(array('christoph.khouri@gmail.com'))
-		->setBody("A file was just viewed - $file")
-		->addPart("A file was just viewed - <b>$file</b>", 'text/html')
-	;
+	switch ($type) {
+		case 'image':
+			$link = "<img src='http://domain.com/$file'>";
+			break;
+		default:
+			$link = $file;
+	}
 
+	$message = Swift_Message::newInstance()
+		->setSubject("File viewed - $file")
+		->setFrom(array("you@email.com" => "Delivery Receipt"))
+		->setTo(array("you@email.com"))
+		->setBody("A file was just viewed - $file")
+		->addPart("A file was just viewed <br><br> $link", "text/html")
+	;
 
 	$result = $mailer->send($message, $failures);
 }
