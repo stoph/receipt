@@ -79,6 +79,9 @@ if (file_exists($full_file) && is_readable($full_file)) {
 
 function send_confirmation($file, $type) {
 
+	if (isset($_GET['no_receipt'])) {
+		return;
+	}
 	$transport = Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs');
 
 	$mailer = Swift_Mailer::newInstance($transport);
@@ -86,7 +89,7 @@ function send_confirmation($file, $type) {
 	// Create the message
 	switch ($type) {
 		case 'image':
-			$link = "<img src='http://domain.com/$file'>";
+			$link = "<img src='http://domain.com/$file?no_receipt'>";
 			break;
 		default:
 			$link = $file;
